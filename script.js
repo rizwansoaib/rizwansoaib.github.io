@@ -26,10 +26,10 @@ class ParticleCanvas {
     }
     
     setupEventListeners() {
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', debounce(() => {
             this.canvas.width = window.innerWidth;
             this.canvas.height = window.innerHeight;
-        });
+        }, 250));
         
         window.addEventListener('mousemove', (e) => {
             this.mouse.x = e.x;
@@ -207,7 +207,7 @@ class Navigation {
     
     init() {
         // Scroll effect
-        window.addEventListener('scroll', () => {
+        window.addEventListener('scroll', throttle(() => {
             if (window.scrollY > 100) {
                 this.navbar.classList.add('scrolled');
             } else {
@@ -215,7 +215,7 @@ class Navigation {
             }
             
             this.updateActiveLink();
-        });
+        }, 100));
         
         // Mobile menu toggle
         if (this.navToggle) {
@@ -589,12 +589,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Uncomment the line below to enable custom cursor
     // new CursorEffect();
     
-    // Add loading animation
-    document.body.style.opacity = '0';
-    setTimeout(() => {
-        document.body.style.transition = 'opacity 1s ease';
-        document.body.style.opacity = '1';
-    }, 100);
+    // Add loading animation (respects prefers-reduced-motion)
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+            document.body.style.transition = 'opacity 1s ease';
+            document.body.style.opacity = '1';
+        }, 100);
+    }
 });
 
 // ===================================
@@ -610,6 +612,18 @@ function debounce(func, wait) {
         };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
+    };
+}
+
+// Throttle function for scroll events
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
     };
 }
 
